@@ -215,6 +215,7 @@ timesliderJS.createtimesliderBox = function(parentNode)
     /* Variables to store values for next round */
     let tmp_timeslider_content = [];
 
+
     while(timeslider_content.length > 0)
     {
         /* Init new row */
@@ -234,9 +235,12 @@ timesliderJS.createtimesliderBox = function(parentNode)
             let range_empty = 0;
 
             /* Check if cells empty */
-            for(let i = current_begin; i <= current_end; i++)
+            for(let i = 0; i <= current_end; i++)
             {
-                if(timeslider_box.childNodes[0].childNodes[i].hasChildNodes())
+                current_begin -= timeslider_box.childNodes[0].childNodes[i].colSpan - 1;
+                current_end -= timeslider_box.childNodes[0].childNodes[i].colSpan - 1;
+
+                if((timeslider_box.childNodes[0].childElementCount <= i) || ((timeslider_box.childNodes[0].childNodes[i].hasChildNodes()) && (i >= current_begin)))
                 {
                     range_empty++;
                     break;
@@ -267,7 +271,10 @@ timesliderJS.createtimesliderBox = function(parentNode)
             }
         }
 
-        timeslider_content = tmp_timeslider_content;
+        while(tmp_timeslider_content.length > 0)
+        {
+            timeslider_content.push(tmp_timeslider_content.shift());
+        }
     }
 
     /* Place hints */
