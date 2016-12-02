@@ -237,10 +237,16 @@ timesliderJS.createtimesliderBox = function(parentNode)
             /* Check if cells empty */
             for(let i = 0; i <= current_end; i++)
             {
+                if(timeslider_box.childNodes[0].childElementCount <= i)
+                {
+                    range_empty++
+                    break;
+                }
+
                 current_begin -= timeslider_box.childNodes[0].childNodes[i].colSpan - 1;
                 current_end -= timeslider_box.childNodes[0].childNodes[i].colSpan - 1;
 
-                if((timeslider_box.childNodes[0].childElementCount <= i) || ((timeslider_box.childNodes[0].childNodes[i].hasChildNodes()) && (i >= current_begin)))
+                if((timeslider_box.childNodes[0].childNodes[i].hasChildNodes()) && (i >= current_begin))
                 {
                     range_empty++;
                     break;
