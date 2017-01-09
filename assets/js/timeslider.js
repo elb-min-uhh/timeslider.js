@@ -261,17 +261,30 @@ timesliderJS.createtimesliderBox = function(parentNode)
             }
             else
             {
-
-                /* Add content to cell(s) */
-                timeslider_box.childNodes[0].childNodes[current_begin].innerHTML = current_content.title;
-                timeslider_box.childNodes[0].childNodes[current_begin].onclick = function(){timesliderJS.showPage(timeslider_infobox, current_content.n);};
-                timeslider_box.childNodes[0].childNodes[current_begin].classList.add("color" + (current_content.n % 5 + 1));
-                if((current_end - current_begin) > 0)
+                let pointer_begin = current_begin;
+                let pointer_end = current_end;
+                for(let i = current_begin; i <= current_end; i++)
                 {
-                    timeslider_box.childNodes[0].childNodes[current_begin].colSpan = (current_end - current_begin + 1);
-                    for(let i = (current_begin + 1); i <= current_end; i++)
+                    if((i - current_begin) % 1000 == 0)
                     {
-                        timeslider_box.childNodes[0].removeChild(timeslider_box.childNodes[0].childNodes[(current_begin + 1)]);
+                        if(i != current_begin)
+                        {
+                            pointer_begin++;
+                        }
+
+                        /* Add content to cell(s) */
+                        timeslider_box.childNodes[0].childNodes[pointer_begin].innerHTML = current_content.title;
+                        timeslider_box.childNodes[0].childNodes[pointer_begin].onclick = function(){timesliderJS.showPage(timeslider_infobox, current_content.n);};
+                        timeslider_box.childNodes[0].childNodes[pointer_begin].classList.add("color" + (current_content.n % 5 + 1));
+                        if((pointer_end - pointer_begin) > 0)
+                        {
+                            timeslider_box.childNodes[0].childNodes[pointer_begin].colSpan = ((pointer_end - pointer_begin + 1) > 1000 ? 1000 : (pointer_end - pointer_begin + 1));
+                        }
+                    }
+                    else if((pointer_end - pointer_begin) > 0)
+                    {
+                        timeslider_box.childNodes[0].removeChild(timeslider_box.childNodes[0].childNodes[(pointer_begin + 1)]);
+                        pointer_end--;
                     }
                 }
             }
