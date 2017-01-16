@@ -96,6 +96,8 @@ timesliderJS.showPage = function(parentNode, n)
         {
             return node.matches('div');
         });
+    let scroll_before = 0;
+    let scroll_next = 0;
 
     for(let i = 0; i < nodes.length; i++)
     {
@@ -107,6 +109,14 @@ timesliderJS.showPage = function(parentNode, n)
         {
             nodes[i].classList.add('hidden');
         }
+        if((n > 0) && (i == (n - 1)))
+        {
+            scroll_before = nodes[i].dataset.scroll;
+        }
+        else if((n < (nodes.length - 1)) && (i == (n + 1)))
+        {
+            scroll_next = nodes[i].dataset.scroll;
+        }
     }
 
     /* Get pagination */
@@ -114,8 +124,8 @@ timesliderJS.showPage = function(parentNode, n)
 
     pagination_buttons[0].classList.add('active');
     pagination_buttons[1].classList.add('active');
-    pagination_buttons[0].onclick = function(){ timesliderJS.showPage(parentNode, (n - 1)); };
-    pagination_buttons[1].onclick = function(){ timesliderJS.showPage(parentNode, (n + 1)); };
+    pagination_buttons[0].onclick = function(){ timesliderJS.showPage(parentNode, (n - 1)); timesliderJS.scroll(parentNode, scroll_before); };
+    pagination_buttons[1].onclick = function(){ timesliderJS.showPage(parentNode, (n + 1)); timesliderJS.scroll(parentNode, scroll_next); };
 
     if(n < 1)
     {
@@ -127,9 +137,40 @@ timesliderJS.showPage = function(parentNode, n)
         pagination_buttons[1].classList.remove('active');
         pagination_buttons[1].onclick = "";
     }
+};
 
 
-    
+/*
+ * scroll()
+ *
+ * Param:  Node, int
+ * Return: void
+ *
+ * This functions scrolls to a specific event
+ *
+ */
+
+timesliderJS.scroll = function(parentNode, target)
+{
+    let timesliderbox = parentNode.parentNode.getElementsByClassName('timesliderbox')[0];
+    let scroll_interval = (target - 4 - timesliderbox.scrollLeft)/30;
+
+    (function(){
+        let interval_counter = 0;
+        let interval = setInterval(function()
+        {
+            if(interval_counter == 30)
+            {
+                clearInterval(interval);
+                timesliderbox.scrollTo(target - 4, 0);
+            }
+            else
+            {
+                timesliderbox.scrollBy(scroll_interval, 0);
+                interval_counter++;
+            }
+        },10)
+    })();
 };
 
 
@@ -209,8 +250,8 @@ timesliderJS.createtimesliderBox = function(parentNode)
     timeslider_box.appendChild(row);
 
     timeslider_box.style.width = (timeslider_info.n_cols * ((-4 * timeslider_info.n_cols) / (timeslider_info.n_cols + 20) + 9) + 4) + "em";
-    timeslider_box.parentNode.onmouseover = function(){hints[0].classList.add('active');hints[1].classList.add('active');};
-    timeslider_box.parentNode.onmouseout = function(){hints[0].classList.remove('active');hints[1].classList.remove('active');};
+    // timeslider_box.parentNode.onmouseover = function(){hints[0].classList.add('active');hints[1].classList.add('active');};
+    // timeslider_box.parentNode.onmouseout = function(){hints[0].classList.remove('active');hints[1].classList.remove('active');};
 
     /* Variables to store values for next round */
     let tmp_timeslider_content = [];
@@ -277,6 +318,7 @@ timesliderJS.createtimesliderBox = function(parentNode)
                         if(event_text)
                         {
                             timeslider_box.childNodes[0].childNodes[pointer_begin].innerHTML = current_content.title;
+                            timeslider_headlines[current_content.n].parentNode.dataset.scroll = timeslider_box.childNodes[0].childNodes[pointer_begin].offsetLeft;
                             event_text = false;
                         }
                         timeslider_box.childNodes[0].childNodes[pointer_begin].onclick = function(){timesliderJS.showPage(timeslider_infobox, current_content.n);};
@@ -302,9 +344,9 @@ timesliderJS.createtimesliderBox = function(parentNode)
     }
 
     /* Place hints */
-    let hints_height = (hints[0].parentNode.offsetHeight + (timeslider_box.parentNode.offsetHeight) / 2);
-    hints[0].style.top = hints_height + "px";
-    hints[1].style.top = hints_height + "px";
+    // let hints_height = (hints[0].parentNode.offsetHeight + (timeslider_box.parentNode.offsetHeight) / 2);
+    // hints[0].style.top = hints_height + "px";
+    // hints[1].style.top = hints_height + "px";
 
 }
 
