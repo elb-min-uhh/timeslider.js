@@ -263,6 +263,7 @@ timesliderJS.createtimesliderBox = function(parentNode)
             {
                 let pointer_begin = current_begin;
                 let pointer_end = current_end;
+                let event_text = true;
                 for(let i = current_begin; i <= current_end; i++)
                 {
                     if((i - current_begin) % 1000 == 0)
@@ -273,7 +274,11 @@ timesliderJS.createtimesliderBox = function(parentNode)
                         }
 
                         /* Add content to cell(s) */
-                        timeslider_box.childNodes[0].childNodes[pointer_begin].innerHTML = current_content.title;
+                        if(event_text)
+                        {
+                            timeslider_box.childNodes[0].childNodes[pointer_begin].innerHTML = current_content.title;
+                            event_text = false;
+                        }
                         timeslider_box.childNodes[0].childNodes[pointer_begin].onclick = function(){timesliderJS.showPage(timeslider_infobox, current_content.n);};
                         timeslider_box.childNodes[0].childNodes[pointer_begin].classList.add("color" + (current_content.n % 5 + 1));
                         if((pointer_end - pointer_begin) > 0)
