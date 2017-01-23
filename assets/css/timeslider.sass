@@ -28,6 +28,18 @@ $accent_color5: #8e6abc
 /* Parent node */
 div.timeslider
 
+    &:fullscreen
+        background-color: #fff
+        padding: 3rem
+
+    &:-webkit-full-screen
+        background-color: #fff
+        padding: 3rem
+
+    &:-moz-full-screen
+        background-color: #fff
+        padding: 3rem
+
     /* Hints */
     div.hints
         position: relative
@@ -35,40 +47,9 @@ div.timeslider
         font-size: .8em
         color: #666
 
-        i
-            position: absolute
-            font-family: eLearn-icons
-            font-size: 5em
-            bottom: .3em
-            line-height: 0
-            padding: 0
-            margin: 0
-            z-index: -1
-            visibility: hidden
-            opacity: 0
-            transition: z-index 0s ease 0.2s, visibility 0s ease 0.2s, opacity 0.2s ease
-
-            &.active
-                z-index: auto
-                visibility: visible
-                opacity: 1
-                transition: opacity 0.2s ease
-
-        i:first-child
-            left: -.7em
-            -webkit-transform: rotate(90deg)
-            transform: rotate(90deg)
-
-
-        i:last-child
-            right: -.7em
-            -webkit-transform: rotate(-90deg)
-            transform: rotate(-90deg)
-
-
     /* timeslider */
     div.timesliderbox
-        min-height: 10em
+        min-height: 10rem
         width: 100%
         overflow-y: hidden
         overflow-x: scroll
@@ -87,7 +68,7 @@ div.timeslider
 
             td
                 vertical-align: middle
-                padding: .2em
+                padding: .2rem
                 border: 0
                 white-space: normal
 

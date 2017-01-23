@@ -162,16 +162,35 @@ timesliderJS.scroll = function(parentNode, target)
             if(interval_counter == 30)
             {
                 clearInterval(interval);
-                timesliderbox.scrollTo(target - 4, 0);
+                timesliderbox.scrollLeft = target - 4;
             }
             else
             {
-                timesliderbox.scrollBy(scroll_interval, 0);
+                timesliderbox.scrollLeft += scroll_interval;
                 interval_counter++;
             }
         },10)
     })();
 };
+
+
+timesliderJS.fullscreen = function(node)
+{
+    if(typeof node.requestFullScreen !== 'undefined')
+    {
+        node.requestFullScreen();
+    }
+    else if(typeof node.webkitRequestFullScreen !== 'undefined')
+    {
+        node.webkitRequestFullScreen();
+    }
+    else if(typeof node.mozRequestFullScreen !== 'undefined')
+    {
+        node.mozRequestFullScreen();
+    }
+
+// .cancelFullScreen()     .webkitCancelFullScreen()   .mozCancelFullScreen()
+}
 
 
 /*
@@ -189,10 +208,10 @@ timesliderJS.createtimesliderBox = function(parentNode)
     /* Move content of timeslider to infobox */
     let tmp_infobox = parentNode.innerHTML;
     parentNode.innerHTML = '';
-    parentNode.insertAdjacentHTML('afterbegin', '<div class="hints"><i aria-hidden="true">1</i><span>Bewegen Sie die Zeitleiste nach links und rechts</span><i aria-hidden="true">1</i></div><div class="timesliderbox"><table></table></div><div class="infobox">' + tmp_infobox + '</div><div class="pagination active"><div class="button"><i>b</i>Voherige</div><div>Zeitleiste</div><div class="button">Nächste<i class="after">n</i></div></div>');
+    parentNode.insertAdjacentHTML('afterbegin', '<div class="hints"><span>Bewegen Sie die Zeitleiste nach links und rechts</span><span class="fullscreen">Vollbild</span></div><div class="timesliderbox"><table></table></div><div class="infobox">' + tmp_infobox + '</div><div class="pagination active"><div class="button"><i>b</i>Voherige</div><div>Zeitleiste</div><div class="button">Nächste<i class="after">n</i></div></div>');
 
     /* Get all dates and titles */
-    let hints = parentNode.getElementsByClassName('hints')[0].getElementsByTagName('i');
+    parentNode.getElementsByClassName('fullscreen')[0].onclick = function(){ timesliderJS.fullscreen(parentNode); };
     let timeslider_infobox = parentNode.getElementsByClassName('infobox')[0];
     let timeslider_headlines = timeslider_infobox.getElementsByTagName('h3');
     let timeslider_content = [];
@@ -250,8 +269,6 @@ timesliderJS.createtimesliderBox = function(parentNode)
     timeslider_box.appendChild(row);
 
     timeslider_box.style.width = (timeslider_info.n_cols * ((-4 * timeslider_info.n_cols) / (timeslider_info.n_cols + 20) + 9) + 4) + "em";
-    // timeslider_box.parentNode.onmouseover = function(){hints[0].classList.add('active');hints[1].classList.add('active');};
-    // timeslider_box.parentNode.onmouseout = function(){hints[0].classList.remove('active');hints[1].classList.remove('active');};
 
     /* Variables to store values for next round */
     let tmp_timeslider_content = [];
@@ -284,8 +301,8 @@ timesliderJS.createtimesliderBox = function(parentNode)
                     break;
                 }
 
-                current_begin -= timeslider_box.childNodes[0].childNodes[i].colSpan - 1;
-                current_end -= timeslider_box.childNodes[0].childNodes[i].colSpan - 1;
+                current_begin += timeslider_box.childNodes[0].childNodes[i].colSpan - 1;
+                current_end += timeslider_box.childNodes[0].childNodes[i].colSpan - 1;
 
                 if((timeslider_box.childNodes[0].childNodes[i].hasChildNodes()) && (i >= current_begin))
                 {
@@ -307,6 +324,7 @@ timesliderJS.createtimesliderBox = function(parentNode)
                 let event_text = true;
                 for(let i = current_begin; i <= current_end; i++)
                 {
+
                     if((i - current_begin) % 1000 == 0)
                     {
                         if(i != current_begin)
@@ -342,12 +360,6 @@ timesliderJS.createtimesliderBox = function(parentNode)
             timeslider_content.push(tmp_timeslider_content.shift());
         }
     }
-
-    /* Place hints */
-    // let hints_height = (hints[0].parentNode.offsetHeight + (timeslider_box.parentNode.offsetHeight) / 2);
-    // hints[0].style.top = hints_height + "px";
-    // hints[1].style.top = hints_height + "px";
-
 }
 
 
