@@ -271,95 +271,147 @@ timesliderJS.createtimesliderBox = function(parentNode)
     timeslider_box.style.width = (timeslider_info.n_cols * ((-4 * timeslider_info.n_cols) / (timeslider_info.n_cols + 20) + 9) + 4) + "em";
 
     /* Variables to store values for next round */
-    let tmp_timeslider_content = [];
+    // let tmp_timeslider_content = [];
 
+    /* Management variable */
+    let timeslider_allocation = [];
 
     while(timeslider_content.length > 0)
     {
-        /* Init new row */
-        let row = document.createElement('tr');
-        for(let i = 0; i < timeslider_info.n_cols; i++)
-        {
-            row.appendChild(document.createElement('td'));
+        let timeslider_event = {
+            content: timeslider_content.shift(),
+            begin: null,
+            end: null,
+            row: null,
+            col: null,
+            offset: 0
         }
-        timeslider_box.insertBefore(row, timeslider_box.childNodes[0]);
+        timeslider_event.begin = timeslider_event.content.date[0].diff(timeslider_info.first, timeslider_info.interval);
+        timeslider_event.end   = (timeslider_event.content.date[1] !== undefined ? timeslider_event.content.date[1].diff(timeslider_info.first, timeslider_info.interval) : timeslider_event.begin);
 
-        /* Iterate through content-array */
-        while(timeslider_content.length > 0)
+        for(let i = 0; i < timeslider_allocation.length; i++)
         {
-            let current_content = timeslider_content.shift();
-            let current_begin = current_content.date[0].diff(timeslider_info.first, timeslider_info.interval);
-            let current_end = (current_content.date[1] !== undefined ? current_content.date[1].diff(timeslider_info.first, timeslider_info.interval) : current_begin);
-            let range_empty = 0;
-
-            /* Check if cells empty */
-            for(let i = 0; i <= current_end; i++)
+            for(let j = 0; j < timeslider_allocation[i].length; j++)
             {
-                if(timeslider_box.childNodes[0].childElementCount <= i)
+                if((timeslider_event.begin > timeslider_allocation[i][j][1]) || (timeslider_event.end < timeslider_allocation[i][j][0]))
                 {
-                    range_empty++
+                    timeslider_event.row = i;
+                    timeslider_event.col = j;
+                    timeslider_event.offset += (timeslider_allocation[i][j][1] - timeslider_allocation[i][j][0]);
+                }
+                else
+                {
+                    timeslider_event.row = null;
                     break;
                 }
-
-                current_begin += timeslider_box.childNodes[0].childNodes[i].colSpan - 1;
-                current_end += timeslider_box.childNodes[0].childNodes[i].colSpan - 1;
-
-                if((timeslider_box.childNodes[0].childNodes[i].hasChildNodes()) && (i >= current_begin))
-                {
-                    range_empty++;
-                    break;
-                }
-            }
-
-            if(range_empty > 0)
-            {
-
-                /* Push for next round */
-                tmp_timeslider_content.push(current_content);
-            }
-            else
-            {
-                let pointer_begin = current_begin;
-                let pointer_end = current_end;
-                let event_text = true;
-                for(let i = current_begin; i <= current_end; i++)
-                {
-
-                    if((i - current_begin) % 1000 == 0)
-                    {
-                        if(i != current_begin)
-                        {
-                            pointer_begin++;
-                        }
-
-                        /* Add content to cell(s) */
-                        if(event_text)
-                        {
-                            timeslider_box.childNodes[0].childNodes[pointer_begin].innerHTML = current_content.title;
-                            timeslider_headlines[current_content.n].parentNode.dataset.scroll = timeslider_box.childNodes[0].childNodes[pointer_begin].offsetLeft;
-                            event_text = false;
-                        }
-                        timeslider_box.childNodes[0].childNodes[pointer_begin].onclick = function(){timesliderJS.showPage(timeslider_infobox, current_content.n);};
-                        timeslider_box.childNodes[0].childNodes[pointer_begin].classList.add("color" + (current_content.n % 5 + 1));
-                        if((pointer_end - pointer_begin) > 0)
-                        {
-                            timeslider_box.childNodes[0].childNodes[pointer_begin].colSpan = ((pointer_end - pointer_begin + 1) > 1000 ? 1000 : (pointer_end - pointer_begin + 1));
-                        }
-                    }
-                    else if((pointer_end - pointer_begin) > 0)
-                    {
-                        timeslider_box.childNodes[0].removeChild(timeslider_box.childNodes[0].childNodes[(pointer_begin + 1)]);
-                        pointer_end--;
-                    }
-                }
+                // console.log(i + " " + j);
             }
         }
 
-        while(tmp_timeslider_content.length > 0)
+        /* In case of no position, create a new row */
+        let row = 0;
+        if(timeslider_event.row == null)
         {
-            timeslider_content.push(tmp_timeslider_content.shift());
+            timeslider_allocation.push( [[timeslider_event.begin, timeslider_event.end]] );
+
+            /* Init new row */
+            let row = document.createElement('tr');
+            for(let i = 0; i < timeslider_info.n_cols; i++)
+            {
+                row.appendChild(document.createElement('td'));
+            }
+            timeslider_box.insertBefore(row, timeslider_box.childNodes[0]);
         }
+        else
+        {
+            timeslider_allocation[timeslider_event.row].push( [timeslider_event.begin, timeslider_event.end] );
+            let row = timeslider_box.childNodes.length - timeslider_event.row;
+        }
+
+        let event_cell = timeslider_box.childNodes[row].childNodes[timeslider_event.begin];
+        event_cell.innerHTML = timeslider_event.content.title;
+        event_cell.onclick = function(){timesliderJS.showPage(timeslider_infobox, timeslider_event.content.n);};
+
+
+
+
+        // /* Iterate through content-array */
+        // while(timeslider_content.length > 0)
+        // {
+        //     let current_content = timeslider_content.shift();
+        //     let current_begin = current_content.date[0].diff(timeslider_info.first, timeslider_info.interval);
+        //     let current_end = (current_content.date[1] !== undefined ? current_content.date[1].diff(timeslider_info.first, timeslider_info.interval) : current_begin);
+        //     let range_empty = 0;
+
+        //     /* Check if cells empty */
+        //     for(let i = 0; i <= current_end; i++)
+        //     {
+        //         if(timeslider_box.childNodes[0].childElementCount <= i)
+        //         {
+        //             range_empty++
+        //             break;
+        //         }
+
+        //         current_begin += timeslider_box.childNodes[0].childNodes[i].colSpan - 1;
+        //         current_end += timeslider_box.childNodes[0].childNodes[i].colSpan - 1;
+
+        //         if((timeslider_box.childNodes[0].childNodes[i].hasChildNodes()) && (i >= current_begin))
+        //         {
+        //             range_empty++;
+        //             break;
+        //         }
+        //     }
+
+        //     if(range_empty > 0)
+        //     {
+
+        //         /* Push for next round */
+        //         tmp_timeslider_content.push(current_content);
+        //     }
+        //     else
+        //     {
+        //         let pointer_begin = current_begin;
+        //         let pointer_end = current_end;
+        //         let event_text = true;
+        //         for(let i = current_begin; i <= current_end; i++)
+        //         {
+
+        //             if((i - current_begin) % 1000 == 0)
+        //             {
+        //                 if(i != current_begin)
+        //                 {
+        //                     pointer_begin++;
+        //                 }
+
+        //                 /* Add content to cell(s) */
+        //                 if(event_text)
+        //                 {
+        //                     timeslider_box.childNodes[0].childNodes[pointer_begin].innerHTML = current_content.title;
+        //                     timeslider_headlines[current_content.n].parentNode.dataset.scroll = timeslider_box.childNodes[0].childNodes[pointer_begin].offsetLeft;
+        //                     event_text = false;
+        //                 }
+        //                 timeslider_box.childNodes[0].childNodes[pointer_begin].onclick = function(){timesliderJS.showPage(timeslider_infobox, current_content.n);};
+        //                 timeslider_box.childNodes[0].childNodes[pointer_begin].classList.add("color" + (current_content.n % 5 + 1));
+        //                 if((pointer_end - pointer_begin) > 0)
+        //                 {
+        //                     timeslider_box.childNodes[0].childNodes[pointer_begin].colSpan = ((pointer_end - pointer_begin + 1) > 1000 ? 1000 : (pointer_end - pointer_begin + 1));
+        //                 }
+        //             }
+        //             else if((pointer_end - pointer_begin) > 0)
+        //             {
+        //                 timeslider_box.childNodes[0].removeChild(timeslider_box.childNodes[0].childNodes[(pointer_begin + 1)]);
+        //                 pointer_end--;
+        //             }
+        //         }
+        //     }
+        // }
+
+        // while(tmp_timeslider_content.length > 0)
+        // {
+        //     timeslider_content.push(tmp_timeslider_content.shift());
+        // }
     }
+    console.log(timeslider_allocation);
 }
 
 
