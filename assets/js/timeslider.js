@@ -176,20 +176,36 @@ timesliderJS.scroll = function(parentNode, target)
 
 timesliderJS.fullscreen = function(node)
 {
-    if(typeof node.requestFullScreen !== 'undefined')
+    if(((typeof document.fullscreenElement !== 'undefined') && (document.fullscreenElement == null)) || ((typeof document.webkitFullscreenElement !== 'undefined') && (document.webkitFullscreenElement == null)) || ((typeof document.mozFullScreenElement !== 'undefined') && (document.mozFullScreenElement == null)))
     {
-        node.requestFullScreen();
+        if(typeof node.requestFullScreen !== 'undefined')
+        {
+            node.requestFullScreen();
+        }
+        else if(typeof node.webkitRequestFullScreen !== 'undefined')
+        {
+            node.webkitRequestFullScreen();
+        }
+        else if(typeof node.mozRequestFullScreen !== 'undefined')
+        {
+            node.mozRequestFullScreen();
+        }
     }
-    else if(typeof node.webkitRequestFullScreen !== 'undefined')
+    else
     {
-        node.webkitRequestFullScreen();
+        if(typeof document.cancelFullScreen !== 'undefined')
+        {
+            document.exitFullscreen();
+        }
+        else if(typeof document.webkitCancelFullScreen !== 'undefined')
+        {
+            document.webkitCancelFullScreen();
+        }
+        else if(typeof document.mozCancelFullScreen !== 'undefined')
+        {
+            document.mozCancelFullScreen();
+        }
     }
-    else if(typeof node.mozRequestFullScreen !== 'undefined')
-    {
-        node.mozRequestFullScreen();
-    }
-
-// .cancelFullScreen()     .webkitCancelFullScreen()   .mozCancelFullScreen()
 }
 
 
@@ -208,16 +224,17 @@ timesliderJS.createtimesliderBox = function(parentNode)
     /* Move content of timeslider to infobox */
     let tmp_infobox = parentNode.innerHTML;
     parentNode.innerHTML = '';
-    parentNode.insertAdjacentHTML('afterbegin', '<div class="hints"><span>Bewegen Sie die Zeitleiste nach links und rechts</span><span class="fullscreen">Vollbild</span></div><div class="timesliderbox"><table></table></div><div class="infobox">' + tmp_infobox + '</div><div class="pagination active"><div class="button"><i>b</i>Voherige</div><div>Zeitleiste</div><div class="button">Nächste<i class="after">n</i></div></div>');
+    parentNode.insertAdjacentHTML('afterbegin', '<div class="hints"><span>Bewegen Sie die Zeitleiste nach links und rechts</span> – <span class="fullscreen">Vollbild</span></div><div class="timesliderbox"></div><div class="infobox">' + tmp_infobox + '</div><div class="pagination active"><div class="button"><i>b</i>Voherige</div><div>Zeitleiste</div><div class="button">Nächste<i class="after">n</i></div></div>');
 
     /* Get all dates and titles */
     parentNode.getElementsByClassName('fullscreen')[0].onclick = function(){ timesliderJS.fullscreen(parentNode); };
     let timeslider_infobox = parentNode.getElementsByClassName('infobox')[0];
     let timeslider_headlines = timeslider_infobox.getElementsByTagName('h3');
     let timeslider_content = [];
-    let timeslider_info = {first: undefined, last: undefined, current: undefined, n_cols: 0};
+    let timeslider_info = {first: undefined, last: undefined, current: undefined, n_cols: 0, zoom: 1};
 
     /* Validate interval mode */
+    timeslider_info.zoom = (parentNode.dataset.zoom > 0 ? parentNode.dataset.zoom : 1);
     timeslider_info.interval = (/^(year|month|day)$/.test(parentNode.dataset.interval) ? parentNode.dataset.interval : 'year');
 
     for(let i = 0; i < timeslider_headlines.length; i++)
@@ -229,38 +246,37 @@ timesliderJS.createtimesliderBox = function(parentNode)
     }
 
     /* Get timesliderBox */
-    let timeslider_box = parentNode.getElementsByClassName('timesliderbox')[0].childNodes[0];
+    let timeslider_box = parentNode.getElementsByClassName('timesliderbox')[0];
 
     /* Set first date as current */
     timeslider_info.current = timeslider_info.first.clone();
 
     /* Create date interval */
-    let row = document.createElement('tr');
+    let row = document.createElement('div');
+    row.classList.add('timesliderrow');
     do
     {
-        let col = document.createElement('th');
-        let col_text;
+        let col = document.createElement('span');
         switch(timeslider_info.interval)
         {
             case 'year':
-                col_text = document.createTextNode(timeslider_info.current.year());
+                col.innerHTML = timeslider_info.current.year();
                 break;
             case 'month':
-                col_text = document.createTextNode(timesliderJS.shortMonth(timesliderJS.MonthDE[timeslider_info.current.month()]) + ' ' + timeslider_info.current.year());
+                col.innerHTML = timesliderJS.shortMonth(timesliderJS.MonthDE[timeslider_info.current.month()]) + '<br>' + timeslider_info.current.year();
                 break;
             case 'day':
-                col_text = document.createTextNode(timeslider_info.current.date() + '. ' + timesliderJS.shortMonth(timesliderJS.MonthDE[timeslider_info.current.month()]) + ' ' + timeslider_info.current.year());
+                col.innerHTML = timeslider_info.current.date() + '. ' + timesliderJS.shortMonth(timesliderJS.MonthDE[timeslider_info.current.month()]) + '<br>' + timeslider_info.current.year();
                 break;
         }
 
         /* Set current to next interval */
-        timeslider_info.current.add(1, timeslider_info.interval);
+        timeslider_info.current.add(timeslider_info.zoom, timeslider_info.interval);
 
         /* Increase column counter */
         timeslider_info.n_cols++;
 
         /* Add col to row */
-        col.appendChild(col_text);
         row.appendChild(col);
     }
     while(timeslider_info.current.isSameOrBefore(timeslider_info.last));
@@ -268,7 +284,7 @@ timesliderJS.createtimesliderBox = function(parentNode)
     /* Add row to timeslider */
     timeslider_box.appendChild(row);
 
-    timeslider_box.style.width = (timeslider_info.n_cols * ((-4 * timeslider_info.n_cols) / (timeslider_info.n_cols + 20) + 9) + 4) + "em";
+    // row.style.width = (timeslider_info.n_cols * ((-4 * timeslider_info.n_cols) / (timeslider_info.n_cols + 20) + 9) + 4) + "em";
 
     /* Variables to store values for next round */
     // let tmp_timeslider_content = [];
@@ -282,9 +298,7 @@ timesliderJS.createtimesliderBox = function(parentNode)
             content: timeslider_content.shift(),
             begin: null,
             end: null,
-            row: null,
-            col: null,
-            offset: 0
+            row: null
         }
         timeslider_event.begin = timeslider_event.content.date[0].diff(timeslider_info.first, timeslider_info.interval);
         timeslider_event.end   = (timeslider_event.content.date[1] !== undefined ? timeslider_event.content.date[1].diff(timeslider_info.first, timeslider_info.interval) : timeslider_event.begin);
@@ -296,122 +310,48 @@ timesliderJS.createtimesliderBox = function(parentNode)
                 if((timeslider_event.begin > timeslider_allocation[i][j][1]) || (timeslider_event.end < timeslider_allocation[i][j][0]))
                 {
                     timeslider_event.row = i;
-                    timeslider_event.col = j;
-                    timeslider_event.offset += (timeslider_allocation[i][j][1] - timeslider_allocation[i][j][0]);
                 }
                 else
                 {
                     timeslider_event.row = null;
-                    break;
                 }
-                // console.log(i + " " + j);
+            }
+            if(timeslider_event.row != null)
+            {
+                break;
             }
         }
 
         /* In case of no position, create a new row */
-        let row = 0;
         if(timeslider_event.row == null)
         {
             timeslider_allocation.push( [[timeslider_event.begin, timeslider_event.end]] );
+            timeslider_event.row = timeslider_allocation.length - 1;
 
             /* Init new row */
-            let row = document.createElement('tr');
-            for(let i = 0; i < timeslider_info.n_cols; i++)
-            {
-                row.appendChild(document.createElement('td'));
-            }
+            let row = document.createElement('div');
+            row.classList.add('timesliderrow');
             timeslider_box.insertBefore(row, timeslider_box.childNodes[0]);
         }
         else
         {
             timeslider_allocation[timeslider_event.row].push( [timeslider_event.begin, timeslider_event.end] );
-            let row = timeslider_box.childNodes.length - timeslider_event.row;
         }
 
-        let event_cell = timeslider_box.childNodes[row].childNodes[timeslider_event.begin];
-        event_cell.innerHTML = timeslider_event.content.title;
-        event_cell.onclick = function(){timesliderJS.showPage(timeslider_infobox, timeslider_event.content.n);};
-
-
-
-
-        // /* Iterate through content-array */
-        // while(timeslider_content.length > 0)
-        // {
-        //     let current_content = timeslider_content.shift();
-        //     let current_begin = current_content.date[0].diff(timeslider_info.first, timeslider_info.interval);
-        //     let current_end = (current_content.date[1] !== undefined ? current_content.date[1].diff(timeslider_info.first, timeslider_info.interval) : current_begin);
-        //     let range_empty = 0;
-
-        //     /* Check if cells empty */
-        //     for(let i = 0; i <= current_end; i++)
-        //     {
-        //         if(timeslider_box.childNodes[0].childElementCount <= i)
-        //         {
-        //             range_empty++
-        //             break;
-        //         }
-
-        //         current_begin += timeslider_box.childNodes[0].childNodes[i].colSpan - 1;
-        //         current_end += timeslider_box.childNodes[0].childNodes[i].colSpan - 1;
-
-        //         if((timeslider_box.childNodes[0].childNodes[i].hasChildNodes()) && (i >= current_begin))
-        //         {
-        //             range_empty++;
-        //             break;
-        //         }
-        //     }
-
-        //     if(range_empty > 0)
-        //     {
-
-        //         /* Push for next round */
-        //         tmp_timeslider_content.push(current_content);
-        //     }
-        //     else
-        //     {
-        //         let pointer_begin = current_begin;
-        //         let pointer_end = current_end;
-        //         let event_text = true;
-        //         for(let i = current_begin; i <= current_end; i++)
-        //         {
-
-        //             if((i - current_begin) % 1000 == 0)
-        //             {
-        //                 if(i != current_begin)
-        //                 {
-        //                     pointer_begin++;
-        //                 }
-
-        //                 /* Add content to cell(s) */
-        //                 if(event_text)
-        //                 {
-        //                     timeslider_box.childNodes[0].childNodes[pointer_begin].innerHTML = current_content.title;
-        //                     timeslider_headlines[current_content.n].parentNode.dataset.scroll = timeslider_box.childNodes[0].childNodes[pointer_begin].offsetLeft;
-        //                     event_text = false;
-        //                 }
-        //                 timeslider_box.childNodes[0].childNodes[pointer_begin].onclick = function(){timesliderJS.showPage(timeslider_infobox, current_content.n);};
-        //                 timeslider_box.childNodes[0].childNodes[pointer_begin].classList.add("color" + (current_content.n % 5 + 1));
-        //                 if((pointer_end - pointer_begin) > 0)
-        //                 {
-        //                     timeslider_box.childNodes[0].childNodes[pointer_begin].colSpan = ((pointer_end - pointer_begin + 1) > 1000 ? 1000 : (pointer_end - pointer_begin + 1));
-        //                 }
-        //             }
-        //             else if((pointer_end - pointer_begin) > 0)
-        //             {
-        //                 timeslider_box.childNodes[0].removeChild(timeslider_box.childNodes[0].childNodes[(pointer_begin + 1)]);
-        //                 pointer_end--;
-        //             }
-        //         }
-        //     }
-        // }
-
-        // while(tmp_timeslider_content.length > 0)
-        // {
-        //     timeslider_content.push(tmp_timeslider_content.shift());
-        // }
+        let event_box = document.createElement('div');
+        let current_row = timeslider_box.childNodes[timeslider_allocation.length - timeslider_event.row - 1];
+        event_box.innerHTML = timeslider_event.content.title;
+        event_box.style.left = ((timeslider_event.begin * 3) / timeslider_info.zoom) + 'rem';
+        event_box.style.width = 'calc(' + (((timeslider_event.end - timeslider_event.begin + 1) * 3) / timeslider_info.zoom) + 'rem - 4pt - .4rem)';
+        event_box.classList.add("color" + (timeslider_event.content.n % 5 + 1));
+        event_box.onclick = function(){timesliderJS.showPage(timeslider_infobox, timeslider_event.content.n);};
+        current_row.appendChild(event_box);
+        timeslider_headlines[timeslider_event.content.n].parentNode.dataset.scroll = event_box.offsetLeft;
+        if(current_row.offsetHeight < event_box.offsetHeight)
+        {
+            current_row.style.height = event_box.offsetHeight + 'px';
+        }
     }
-    console.log(timeslider_allocation);
 }
 
 
