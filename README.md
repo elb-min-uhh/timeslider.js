@@ -46,7 +46,7 @@ Following examples show you some valid dates:
 
 * 2016 v.Chr.
 * April 2016
-* 01. Januar 2016 n.Chr.
+* 01\. Januar 2016 n.Chr.
 
 
 ### $TIME
@@ -67,7 +67,7 @@ There are three options you can set, which individualize the projection of the t
 
 1) Interval: year, month, day, hour, minute, second or millisecond
 2) Mode: date, time, datetime
-3) Zoom: $n >= 1$, e.g. 1, 5 or 10
+3) Zoom: n >= 1, e.g. 1, 5 or 10
 
 
 ## Code-Snippet
