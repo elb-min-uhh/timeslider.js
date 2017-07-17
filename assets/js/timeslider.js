@@ -56,20 +56,20 @@ timesliderJS.parseDate = function(date, info)
 {
     let tmp_date = date.split(' - ');
     let tmp_range = [];
-    let regex = /^(?:(\d{1,2})\. )?(?:(\w+) )?(\d{1,4})(?: (n\.Chr\.|v\.Chr\.))?$/;
+    let regex = /^(?:(?:(\d{1,2})\. )?(?:(\w+) )?(\d{1,4})(?: (n\.Chr\.|v\.Chr\.))?)?(?: )?(?:(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?)?$/;
     for(let i = 0; i < tmp_date.length; i++)
     {
         let match = regex.exec(tmp_date[i]);
         let month = timesliderJS.MonthDE.indexOf(match[2]);
 
         tmp_range.push(moment({
-                year:         (match[4] == 'v.Chr.' ? -1 : 1) * match[3],
+                year:         (match[3] ? ((match[4] == 'v.Chr.' ? -1 : 1) * match[3]) : 0),
                 month:        (month > 0 ? month : 0),
                 date:         (match[1] ? match[1] : 1),
-                hour:         0,
-                minute:       0,
-                seconds:      0,
-                milliseconds: 0
+                hour:         (match[5] ? match[5] : 0),
+                minute:       (match[6] ? match[6] : 0),
+                seconds:      (match[7] ? match[7] : 0),
+                milliseconds: (match[8] ? match[8] : 0)
             }));
         info.first = (info.first === undefined ? tmp_range[i] : moment.min(info.first, tmp_range[i]));
         info.last = (info.last === undefined ? tmp_range[i] : moment.max(info.last, tmp_range[i]));
@@ -231,11 +231,12 @@ timesliderJS.createtimesliderBox = function(parentNode)
     let timeslider_infobox = parentNode.getElementsByClassName('infobox')[0];
     let timeslider_headlines = timeslider_infobox.getElementsByTagName('h3');
     let timeslider_content = [];
-    let timeslider_info = {first: undefined, last: undefined, current: undefined, n_cols: 0, zoom: 1};
+    let timeslider_info = {first: undefined, last: undefined, current: undefined, n_cols: 0};
 
-    /* Validate interval mode */
+    /* Validate special modes */
     timeslider_info.zoom = (parentNode.dataset.zoom > 0 ? parentNode.dataset.zoom : 1);
-    timeslider_info.interval = (/^(year|month|day)$/.test(parentNode.dataset.interval) ? parentNode.dataset.interval : 'year');
+    timeslider_info.interval = (/^(year|month|day|hour|minute|second|millisecond)$/.test(parentNode.dataset.interval) ? parentNode.dataset.interval : 'year');
+    timeslider_info.mode = (/^(date|time|datetime)$/.test(parentNode.dataset.mode) ? parentNode.dataset.mode : 'date');
 
     for(let i = 0; i < timeslider_headlines.length; i++)
     {
@@ -257,17 +258,44 @@ timesliderJS.createtimesliderBox = function(parentNode)
     do
     {
         let col = document.createElement('span');
-        switch(timeslider_info.interval)
+        if((timeslider_info.mode == 'date') || (timeslider_info.mode == 'datetime'))
         {
-            case 'year':
-                col.innerHTML = timeslider_info.current.year();
-                break;
-            case 'month':
-                col.innerHTML = timesliderJS.shortMonth(timesliderJS.MonthDE[timeslider_info.current.month()]) + '<br>' + timeslider_info.current.year();
-                break;
-            case 'day':
-                col.innerHTML = timeslider_info.current.date() + '. ' + timesliderJS.shortMonth(timesliderJS.MonthDE[timeslider_info.current.month()]) + '<br>' + timeslider_info.current.year();
-                break;
+            switch(timeslider_info.interval)
+            {
+                case 'year':
+                    col.innerHTML = timeslider_info.current.year();
+                    break;
+                case 'month':
+                    col.innerHTML = timesliderJS.shortMonth(timesliderJS.MonthDE[timeslider_info.current.month()]) + '<br>' + timeslider_info.current.year();
+                    break;
+                default:
+                    col.innerHTML = timeslider_info.current.date() + '. ' + timesliderJS.shortMonth(timesliderJS.MonthDE[timeslider_info.current.month()]) + '<br>' + timeslider_info.current.year();
+                    break;
+            }
+        }
+
+        if((timeslider_info.mode == 'time') || (timeslider_info.mode == 'datetime'))
+        {
+            switch(timeslider_info.interval)
+            {
+                case 'hour':
+                    col.innerHTML += '<br>' + timeslider_info.current.format('HH');
+                    break;
+                case 'minute':
+                    col.innerHTML += '<br>' + timeslider_info.current.format('HH:mm');
+                    break;
+                case 'second':
+                    col.innerHTML += '<br>' + timeslider_info.current.format('HH:mm:ss');
+                    break;
+                case 'millisecond':
+                    col.innerHTML += '<br>' + timeslider_info.current.format('mm:ss.SSS');
+                    break;
+            }
+        }
+
+        if(timeslider_info.mode == 'datetime')
+        {
+            col.innerHTML += ' Uhr';
         }
 
         /* Set current to next interval */
@@ -340,9 +368,17 @@ timesliderJS.createtimesliderBox = function(parentNode)
 
         let event_box = document.createElement('div');
         let current_row = timeslider_box.childNodes[timeslider_allocation.length - timeslider_event.row - 1];
+        let width_factor = 3;
+        if((timeslider_info.interval == 'second') || (timeslider_info.interval == 'millisecond'))
+        {
+            width_factor = 5;
+        }
+
         event_box.innerHTML = timeslider_event.content.title;
-        event_box.style.left = ((timeslider_event.begin * 3) / timeslider_info.zoom) + 'rem';
-        event_box.style.width = 'calc(' + (((timeslider_event.end - timeslider_event.begin + 1) * 3) / timeslider_info.zoom) + 'rem - 4pt - .4rem)';
+        event_box.style.left = ((timeslider_event.begin * width_factor) / timeslider_info.zoom) + 'rem';
+
+
+        event_box.style.width = 'calc(' + (((timeslider_event.end - timeslider_event.begin + 1) * width_factor) / timeslider_info.zoom) + 'rem - 4pt - .4rem)';
         event_box.classList.add("color" + (timeslider_event.content.n % 5 + 1));
         event_box.onclick = function(){timesliderJS.showPage(timeslider_infobox, timeslider_event.content.n);};
         current_row.appendChild(event_box);

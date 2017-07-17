@@ -6,8 +6,17 @@
 #
 #
 
+# =====[ Configurations ]===========================================================================
 
-# =====[ Code ]=================================================================
+CC      = sassc
+CFLAGS  = -t compressed
+SOURCES = assets/css/timeslider.sass
+RESULT  = $(SOURCES:.sass=.css)
 
-build:
-	sass -t compressed assets/css/timeslider.sass assets/css/timeslider.css
+
+# =====[ Code ]=====================================================================================
+
+all: $(RESULT)
+
+%.css: %.sass
+	$(CC) $(CFLAGS) $< $@
