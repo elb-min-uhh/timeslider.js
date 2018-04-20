@@ -390,20 +390,25 @@ timesliderJS.createtimesliderBox = function(parentNode)
     }
 
     // automatic resize, when visibility changes
-    var options = {
-        root: document.body,
-        rootMargin: '0px',
-        threshold: 1.0
-    }
-    var observer = new IntersectionObserver(function(entries, observer) {
-        for(var i=0; i<entries.length; i++) {
-            var entry = entries[i];
-            if(entry.isIntersecting) {
-                timesliderJS.resizeTimesliderBox(entry.target);
-            }
+    try {
+        var options = {
+            root: document.body,
+            rootMargin: '0px',
+            threshold: 1.0
         }
-    }, options);
-    observer.observe(timeslider_box);
+        var observer = new IntersectionObserver(function(entries, observer) {
+            for(var i=0; i<entries.length; i++) {
+                var entry = entries[i];
+                if(entry.isIntersecting) {
+                    timesliderJS.resizeTimesliderBox(entry.target);
+                }
+            }
+        }, options);
+        observer.observe(timeslider_box);
+    } catch(e) {
+        // ignore errors, this fix will not work when IntersectionObserver
+        // is not implemented
+    }
 }
 
 timesliderJS.resizeAllTimesliderBoxes = function() {
