@@ -388,6 +388,48 @@ timesliderJS.createtimesliderBox = function(parentNode)
             current_row.style.height = event_box.offsetHeight + 'px';
         }
     }
+
+    // automatic resize, when visibility changes
+    var options = {
+        root: document.body,
+        rootMargin: '0px',
+        threshold: 1.0
+    }
+    var observer = new IntersectionObserver(function(entries, observer) {
+        for(var i=0; i<entries.length; i++) {
+            var entry = entries[i];
+            if(entry.isIntersecting) {
+                timesliderJS.resizeTimesliderBox(entry.target);
+            }
+        }
+    }, options);
+    observer.observe(timeslider_box);
+}
+
+timesliderJS.resizeAllTimesliderBoxes = function() {
+    var boxes = document.getElementsByClassName("timeslider");
+    for(var i=0; i < boxes.length; i++) {
+        timesliderJS.resizeTimesliderBox(boxes[i]);
+    }
+}
+
+timesliderJS.resizeTimesliderBox = function(box) {
+    var rows = box.getElementsByClassName("timesliderrow");
+    for(var i=0; i < rows.length; i++) {
+        var row = rows[i];
+
+        var max_height = 0;
+
+        var event_boxes = row.children;
+        for(var j=0; j < event_boxes.length; j++) {
+            var event_box = event_boxes[i];
+            if(event_box.tagName === "DIV" && event_box.offsetHeight > max_height) {
+                max_height = event_box.offsetHeight;
+            }
+        }
+
+        row.style.height = max_height + 'px';
+    }
 }
 
 
