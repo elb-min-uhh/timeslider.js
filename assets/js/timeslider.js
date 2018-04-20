@@ -428,7 +428,9 @@ timesliderJS.resizeTimesliderBox = function(box) {
             }
         }
 
-        row.style.height = max_height + 'px';
+        if(max_height > 0) {
+            row.style.height = max_height + 'px';
+        }
     }
 }
 
